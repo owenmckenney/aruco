@@ -58,7 +58,7 @@ while True:
     # runs only if aruco is detected
     if ids is not None:
 
-        # estimate pose of the marker. rvecs is the rotation vector, tvecs is the translation vector (x, y, z) coordinates
+        # estimate pose of the marker. rvecs is the rotation vector, tvecs is the translation vector
         rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(corners, marker_size, camera_matrix, distortion_coefficients)
 
         for i, (rvec, tvec) in enumerate(zip(rvecs, tvecs)):
