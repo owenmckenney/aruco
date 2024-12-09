@@ -4,37 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import time
-
-# class for handling path generation & error calculation
-class Path:
-    def __init__(self):
-        self.xt = 0
-        self.yt = 0
-        self.zt = 0
-
-    def generate_path(self, xi, yi, zi):
-        self.xi = xi
-        self.yi = yi
-        self.zi = zi
-        self.t = np.linspace(0, 1, 100) # 100 points t: 0 -> 1
-
-        # quadratic from camera -> target
-        self.m = 5
-        self.func_x = self.xt + self.t * (self.xi - self.xt)
-        self.func_y = self.yt + self.t * (self.yi - self.yt)
-        self.func_z = (self.zi - self.zt - self.m) * self.t ** 2 + self.m * self.t + self.zt
- 
-        return self.func_x, self.func_y ,self.func_z
-        
-    # returns the closest point on the path in relation to the input coordinates and the scalar distance to that point
-    def closest_point(self, vx, vy, vz):
-        distances = np.sqrt((self.func_x - vx) ** 2 + (self.func_y - vy) ** 2 + (self.func_z - vz) ** 2)
-        min_dist_index = np.argmin(distances)
-        closest_point = [self.func_x[min_dist_index], self.func_y[min_dist_index], self.func_z[min_dist_index]]
-        distance = np.sqrt((self.func_x[min_dist_index] - vx) ** 2 + (self.func_y[min_dist_index] - vy) ** 2 + (self.func_z[min_dist_index] - vy) ** 2)
-
-        return closest_point, distance
-    
+from mantabot_control import Path    
 
 # class for handling arUco target detection & pose/coordinate extraction
 class TargetDetection:
@@ -127,7 +97,7 @@ if __name__ == "__main__":
     target_detector = TargetDetection(200, camera_matrix, distortion_coefficients)
 
     marker_detected = False
-    path_generated = True
+    path_generated = False
     start_detection = False
 
     # matplotlib visualization
@@ -161,10 +131,9 @@ if __name__ == "__main__":
         #     path_generated = True
         # else:
             # vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=True)
-            
+
         if path_generated:
-            closest_point, distance = path.closest_point(vehicle_x, vehicle_y, vehicle_z)
-            closest_x, closest_y, closest_z = closest_point
+            closest_x, closest_y, closest_z = path.closest_point(vehicle_x, vehicle_y, vehicle_z)
 
             ax1.plot(path_x, path_y, path_z, color='blue')
             ax1.scatter(closest_x, closest_y, closest_z, color='green', s=50, label="Closest Path Point")
