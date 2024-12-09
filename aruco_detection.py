@@ -35,7 +35,7 @@ class Path:
 
         return closest_point, distance
     
-    
+
 # class for handling arUco target detection & pose/coordinate extraction
 class TargetDetection:
     def __init__(self, marker_size, camera_matrix, distortion_coefficients):
@@ -75,7 +75,7 @@ class TargetDetection:
                 
             return self.rvecs, self.tvecs
 
-        return None, None
+        return None
     
     def extract_coordinates(self, filtered=False):
         rvec = np.array(self.rvecs).reshape((3, 1))
@@ -127,6 +127,8 @@ if __name__ == "__main__":
     target_detector = TargetDetection(200, camera_matrix, distortion_coefficients)
 
     marker_detected = False
+    path_generated = True
+    start_detection = False
 
     # matplotlib visualization
     plt.ion()
@@ -139,17 +141,31 @@ if __name__ == "__main__":
 
     while True:
         image = picam0.capture_array("main")
-        target_detector.detect_aruco(image)
+        aruco = target_detector.detect_aruco(image)
 
-        if not marker_detected:
-            vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=False)
-            path_x, path_y, path_z = path.generate_path(vehicle_x, vehicle_y, vehicle_z)
-            marker_detected = True
+        if aruco is not None and not start_detection and not path_generated:
+            sdt = time.time()
+            start_detection = True
         else:
-            vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=True)
+            start_detection = False
+
+        vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=True)
+
+        if time.time() - sdt > 1.0 and not path_generated:
+            path_x, path_y, path_z = path.generate_path(vehicle_x, vehicle_y, vehicle_z)
+            path_generated = True
+
+        # if not path_generated :
+        #     vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=False)
+        #     path_x, path_y, path_z = path.generate_path(vehicle_x, vehicle_y, vehicle_z)
+        #     path_generated = True
+        # else:
+            # vehicle_x, vehicle_y, vehicle_z = target_detector.extract_coordinates(filtered=True)
+            
+        if path_generated:
             closest_point, distance = path.closest_point(vehicle_x, vehicle_y, vehicle_z)
             closest_x, closest_y, closest_z = closest_point
-            
+
             ax1.plot(path_x, path_y, path_z, color='blue')
             ax1.scatter(closest_x, closest_y, closest_z, color='green', s=50, label="Closest Path Point")
 
